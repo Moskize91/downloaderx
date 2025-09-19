@@ -31,7 +31,7 @@ class RangeDownloader:
 
     content_length, etag, range_useable = self._fetch_meta(http_options.retry)
     if content_length is None:
-      raise ValueError("Content-Length header is missing in response")
+      raise RangeDownloadFailedError("Content-Length header is missing in response")
     if not range_useable:
       raise RangeDownloadFailedError("Server does not support Range requests")
 

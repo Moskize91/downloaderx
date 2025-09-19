@@ -21,13 +21,18 @@ def get_image(file_name: str):
   enable_range = request.args.get("range", default=False, type=bool)
   reject_first = request.args.get("reject_first", default=False, type=bool)
   break_random = request.args.get("break_random", default=False, type=bool)
+  no_content_length = request.args.get("no_content_length", default=False, type=bool)
 
   try:
     if request.method == "HEAD":
       response = send_file(image_path, mimetype="image/jpeg")
       if enable_range or not reject_first:
         response.headers["Accept-Ranges"] = "bytes"
-        response.headers["Content-Length"] = str(image_file_size)
+        if no_content_length:
+          # 删除send_file自动添加的Content-Length头
+          response.headers.pop("Content-Length", None)
+        else:
+          response.headers["Content-Length"] = str(image_file_size)
 
     elif request.method == "GET":
       range_header = request.headers.get(key="Range")
@@ -56,7 +61,8 @@ def get_image(file_name: str):
           image_data = gen_image_data(image_data)
 
       else:
-        headers["Content-Length"] = str(image_file_size)
+        if not no_content_length:
+          headers["Content-Length"] = str(image_file_size)
         with open(image_path, "rb") as file:
           image_data = file.read()
 

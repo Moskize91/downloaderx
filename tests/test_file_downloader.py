@@ -259,3 +259,74 @@ def _shuffle_indexes(length: int, seed: int) -> list[int]:
   indexes = list(range(length))
   random.shuffle(indexes)
   return indexes
+
+
+class TestContentLengthFallback(unittest.TestCase):
+  """测试Content-Length缺失时的降级行为"""
+
+  @classmethod
+  def setUpClass(cls):
+    cls.process = subprocess.Popen(
+      ["python", str(Path(__file__).parent / "start_flask.py")],
+      stdout=subprocess.PIPE,
+      stderr=subprocess.PIPE,
+      text=True
+    )
+    time.sleep(1.0)
+    shutil.rmtree(_TEMP_PATH, ignore_errors=True)
+
+  @classmethod
+  def tearDownClass(cls):
+    cls.process.terminate()
+
+  def test_download_without_content_length(self):
+    """测试当服务器缺少Content-Length头时降级到非range下载模式"""
+    temp_path = _TEMP_PATH / "test_download_without_content_length"
+    temp_path.mkdir(parents=True, exist_ok=True)
+    download_file = temp_path / "mirai.jpg"
+
+    # 使用 no_content_length=true 参数让服务器不返回Content-Length头
+    file = FileDownloader(
+      file_path=download_file,
+      min_segment_length=1024,
+      once_fetch_size=2048,
+      http_options=HTTPOptions(
+        url=f"http://localhost:{PORT}/images/mirai.jpg?range=true&no_content_length=true",
+        timeout=1.5,
+        headers=None,
+        cookies=None,
+        retry=Retry(retry_times=0, retry_sleep=0),
+      ),
+    )
+
+    # 当Content-Length缺失时，_range_downloader应该为None（降级到非range模式）
+    # 因为RangeDownloader在初始化时会抛出RangeDownloadFailedError，被FileDownloader捕获并忽略
+    self.assertIsNone(file._range_downloader)
+
+    # 文件应该能正常下载完成（使用非range模式）
+    run_download_task = file.pop_downloading_task()
+    self.assertIsNotNone(run_download_task, "应该能获取下载任务")
+    self.assertIsNone(file.pop_downloading_task(), "非range模式应该只有一个任务")
+
+    # 执行下载任务
+    run_download_task()
+
+    # 在非range模式下，文件应该作为.downloading文件存在
+    raw_file = Path(__file__).parent / "assets" / "mirai.jpg"
+    chunk_file = download_file.parent / f"{download_file.name}.downloading"
+    self.assertTrue(chunk_file.exists(), f"下载块文件应该存在: {chunk_file}")
+
+    # 验证文件完整性
+    self.assertEqual(
+      _sha256(chunk_file),
+      _sha256(raw_file),
+    )
+
+    # 完成下载
+    final_path = file.try_complete()
+    self.assertEqual(final_path, download_file)
+    self.assertTrue(download_file.exists(), f"最终下载文件应该存在: {download_file}")
+    self.assertEqual(
+      _sha256(download_file),
+      _sha256(raw_file),
+    )
