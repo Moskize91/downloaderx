@@ -15,7 +15,7 @@ from downloaderx.file import (
   FileDownloader,
   InterruptionError,
   CanRetryError,
-  RangeNotSupportedError,
+  RangeDownloadFailedError,
 )
 
 
@@ -125,7 +125,7 @@ class TestFileDownloader(unittest.TestCase):
       thread.join()
 
     for error in errors[1:]: # 第一个可能直接 200 成功，测试用例中应该排除随机性
-      assert isinstance(error, RangeNotSupportedError), "Expected RangeNotSupportedError"
+      assert isinstance(error, RangeDownloadFailedError), "Expected RangeNotSupportedError"
 
     download_task = file.pop_downloading_task()
     assert download_task is not None, "Failed to pop final task"
@@ -162,7 +162,7 @@ class TestFileDownloader(unittest.TestCase):
       try:
         task()
       except CanRetryError as error:
-        assert not isinstance(error, RangeNotSupportedError), "Expected CanRetryError, not RangeNotSupportedError"
+        assert not isinstance(error, RangeDownloadFailedError), "Expected CanRetryError, not RangeNotSupportedError"
         task = file.pop_downloading_task()
         if task:
           tasks_queue.append(task)
