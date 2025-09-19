@@ -8,7 +8,7 @@ from threading import Lock
 
 from ..common import is_exception_can_retry, CAN_RETRY_STATUS_CODES, HTTPOptions
 from .common import chunk_name
-from .errors import CanRetryError, RangeNotSupportedError
+from .errors import CanRetryError, RangeDownloadFailedError
 from .segment import Segment
 from .range_downloader import RangeDownloader
 from .utils import clean_path
@@ -51,7 +51,7 @@ class FileDownloader:
         once_fetch_size=once_fetch_size,
         excepted_etag=excepted_etag,
       )
-    except RangeNotSupportedError:
+    except RangeDownloadFailedError:
       pass
 
   def pop_downloading_task(self) -> Callable[[], None] | None:
@@ -86,7 +86,7 @@ class FileDownloader:
       if not self._did_dispose:
         range_downloader.download_segment(segment)
 
-    except RangeNotSupportedError as error:
+    except RangeDownloadFailedError as error:
       if not error.is_canceled_by:
         with self._range_lock:
           range_downloader.serial.interrupt()

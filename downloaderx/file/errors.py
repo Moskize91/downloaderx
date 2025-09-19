@@ -5,7 +5,7 @@ class InterruptionError(Exception):
 class CanRetryError(Exception):
   pass
 
-class RangeNotSupportedError(CanRetryError):
+class RangeDownloadFailedError(CanRetryError):
   def __init__(self, message: str, is_canceled_by: bool = False) -> None:
     super().__init__(message)
     self._is_canceled_by: bool = is_canceled_by
