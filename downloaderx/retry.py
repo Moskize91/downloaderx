@@ -66,7 +66,7 @@ _CAN_RETRY_KEYWORDS = (
 )
 
 def is_exception_can_retry(error: Exception) -> bool:
-  for current_exc in _walk_exception_chain(error, max_depth=3):
+  for current_exc in _walk_exception_chain(error, max_depth=12):
     for retry_class in _CAN_RETRY_EXCEPTIONS:
       if isinstance(current_exc, retry_class):
         return True
@@ -79,7 +79,7 @@ def is_exception_can_retry(error: Exception) -> bool:
   return False
 
 
-def _walk_exception_chain(error: Exception, max_depth: int = 3):
+def _walk_exception_chain(error: Exception, max_depth: int):
   current_exc = error
   depth = 0
 
