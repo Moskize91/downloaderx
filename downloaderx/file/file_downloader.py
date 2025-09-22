@@ -6,7 +6,8 @@ from enum import Enum
 from typing import Callable
 from threading import Lock
 
-from ..common import is_exception_can_retry, CAN_RETRY_STATUS_CODES, HTTPOptions
+from ..common import HTTPOptions
+from ..retry import is_exception_can_retry, CAN_RETRY_STATUS_CODES
 from .common import chunk_name
 from .errors import CanRetryError, RangeDownloadFailedError
 from .segment import Segment

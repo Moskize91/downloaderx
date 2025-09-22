@@ -4,7 +4,8 @@ import requests
 from pathlib import Path
 from typing import Mapping
 
-from ..common import is_exception_can_retry, CAN_RETRY_STATUS_CODES, Retry, HTTPOptions
+from ..common import HTTPOptions
+from ..retry import is_exception_can_retry, CAN_RETRY_STATUS_CODES, Retry
 from .segment import Serial, Segment, SegmentDescription
 from .value_signal import ValueSignal
 from .common import chunk_name, DOWNLOADING_SUFFIX
