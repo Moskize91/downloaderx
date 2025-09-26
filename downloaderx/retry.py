@@ -56,6 +56,7 @@ _CAN_RETRY_EXCEPTIONS = (
   http.client.IncompleteRead,      # 读取不完整（网络中断）
   http.client.BadStatusLine,       # 状态行错误
   http.client.ResponseNotReady,    # 响应未准备好
+  http.client.RemoteDisconnected,  # 远程连接被关闭
 )
 
 _CAN_RETRY_KEYWORDS = (
