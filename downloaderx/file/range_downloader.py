@@ -174,7 +174,7 @@ class RangeDownloader:
     if self._http_options.headers:
       headers.update(self._http_options.headers)
 
-    headers["Range"] = f"{download_start}-{download_end}"
+    headers["Range"] = f"bytes={download_start}-{download_end}"
     response = requests.Session().get(
       stream=True,
       url=self._http_options.url,
