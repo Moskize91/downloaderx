@@ -174,7 +174,7 @@ class RangeDownloader:
     if self._http_options.headers:
       headers.update(self._http_options.headers)
 
-    headers["Range"] = f"{download_start}-{download_end}"
+    headers["Range"] = f"bytes={download_start}-{download_end}"
     response = requests.Session().get(
       stream=True,
       url=self._http_options.url,
@@ -192,7 +192,7 @@ class RangeDownloader:
       content_range = response.headers.get("Content-Range")
       content_length = response.headers.get("Content-Length")
 
-      if content_range != f"bytes {download_start}-{download_end}/{download_length}":
+      if content_range != f"bytes {download_start}-{download_end}/{self._serial.length}":
         raise RangeDownloadFailedError(f"Unexpected Content-Range: {content_range}")
       if content_length != f"{download_length}":
         raise RangeDownloadFailedError(f"Unexpected Content-Length: {content_length}")

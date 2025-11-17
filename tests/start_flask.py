@@ -47,7 +47,7 @@ def get_image(file_name: str):
           return jsonify({"error": "Gateway Timeout"}), 504
 
         headers["Accept-Ranges"] = "bytes"
-        headers["Content-Range"] = f"bytes {start}-{end}/{end - start + 1}"
+        headers["Content-Range"] = f"bytes {start}-{end}/{image_file_size}"
         headers["Content-Length"] = str(length)
 
         with open(image_path, "rb") as file:
@@ -84,7 +84,12 @@ def handle_500_error(_):
   return traceback.format_exc(), 500
 
 def _parse_range_header(range_header: str, file_size: int):
-  start, end = range_header.split("-")
+  # Range header format: "bytes=start-end"
+  if not range_header.startswith("bytes="):
+    raise ValueError("Invalid range header format")
+
+  range_part = range_header[6:]  # Remove "bytes=" prefix
+  start, end = range_part.split("-")
   start = int(start) if start else 0
   end = int(end) if end else file_size - 1
 
